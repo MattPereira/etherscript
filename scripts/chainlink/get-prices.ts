@@ -1,8 +1,6 @@
-import * as dotenv from "dotenv";
-dotenv.config();
 import AggregatorV3InterfaceABI from "@chainlink/contracts/abi/v0.8/AggregatorV3Interface.json";
 import hre from "hardhat";
-import { networkConfig } from "../hardhat-helper-config";
+import { networkConfig } from "../../hardhat-helper-config";
 import chalk from "chalk";
 
 /** Get prices from chainlink price feed aggregator denominated in USD
@@ -66,6 +64,14 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+  if (
+    error instanceof TypeError &&
+    error.message.includes("Cannot destructure property")
+  ) {
+    console.error(
+      chalk.red("Please include the --network flag with a configured network")
+    );
+  } else {
+    console.error(error);
+  }
 });
