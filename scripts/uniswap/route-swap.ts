@@ -6,7 +6,7 @@ import { networkConfig } from "../../hardhat-helper-config";
 
 // import {ChainId, AlphaRouter} from "@uniswap/smart-order-router"
 
-/** Swap USDC for ETH on Uniswap OR 1inch
+/** Use smart order router to compute optimal routes and execute swaps
  *
  * https://docs.uniswap.org/sdk/v3/guides/routing
  */

@@ -15,6 +15,11 @@ const privateKey = process.env.PRIVATE_KEY!;
 const config: HardhatUserConfig = {
   solidity: "0.8.19",
   networks: {
+    hardhat: {
+      forking: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
+      },
+    },
     mainnet: {
       chainId: 1,
       url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
