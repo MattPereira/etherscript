@@ -1,12 +1,9 @@
 // This file stores web3 related constants such as addresses, token definitions, ETH currency references and ABI's
 import { ChainId, Token } from "@uniswap/sdk-core";
 
-// EVERYTHIN IS ARBITRUM ONE
-
 // CONTRACT ADDRESSES
-
-// Smart Swap tutorial
 export const V3_SWAP_ROUTER_ADDRESS =
+  // same contract on every popoular network?
   "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
 
 // TOKENS
@@ -26,33 +23,21 @@ export const USDC_TOKEN = new Token(
   "USD Coin"
 );
 
-// ABIS
-export const ERC20_ABI = [
-  // Read-Only Functions
-  "function balanceOf(address owner) view returns (uint256)",
-  "function decimals() view returns (uint8)",
-  "function symbol() view returns (string)",
+// PROGRAMMATICALLY CREATE SDK TOKEN OBJECT ?
+// async function createToken(chainId: number, address: string): Token {
+//   const { ethers } = hre;
+//   const tokenContract = new ethers.Contract(
+//     address,
+//     ERC20_ABI,
+//     ethers.provider
+//   );
 
-  // Authenticated Functions
-  "function transfer(address to, uint amount) returns (bool)",
-  "function approve(address _spender, uint256 _value) returns (bool)",
+//   console.log("here");
 
-  // Events
-  "event Transfer(address indexed from, address indexed to, uint amount)",
-];
+//   console.log(await tokenContract.decimals());
+//   const decimals = 18;
+//   const symbol = "WETH";
+//   const name = "Wrapped Ether";
 
-export const WETH_ABI = [
-  // Wrap ETH
-  "function deposit() payable",
-
-  // Unwrap ETH
-  "function withdraw(uint wad) public",
-
-  // get WETH balance
-  "function balanceOf(address owner) view returns (uint256)",
-];
-
-// Transactions
-
-export const MAX_FEE_PER_GAS = 100000000000;
-export const MAX_PRIORITY_FEE_PER_GAS = 100000000000;
+//   return new Token(chainId, address, decimals, symbol, name);
+// }

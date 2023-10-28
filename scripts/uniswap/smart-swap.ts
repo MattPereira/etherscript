@@ -4,21 +4,20 @@ import hre from "hardhat";
 import {
   AlphaRouter,
   SwapOptionsSwapRouter02,
-  SwapRoute,
   SwapType,
-  V3Route,
 } from "@uniswap/smart-order-router";
 import { BaseProvider } from "@ethersproject/providers";
-import { ForkSwapConfig, RealSwapConfig, ISwapConfig } from "./libs/config";
-import { Percent, CurrencyAmount, TradeType, ChainId } from "@uniswap/sdk-core";
 import {
-  ERC20_ABI,
-  V3_SWAP_ROUTER_ADDRESS,
+  ForkSwapConfig,
+  RealSwapConfig,
+  ISwapConfig,
   MAX_FEE_PER_GAS,
   MAX_PRIORITY_FEE_PER_GAS,
-} from "./libs/constants";
-import { wrapETH } from "../helper/wrapETH";
+} from "./libs/config";
+import { Percent, CurrencyAmount, TradeType, ChainId } from "@uniswap/sdk-core";
+import { wrapETH, approveToken, getTokenBalance } from "../helper";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { V3_SWAP_ROUTER_ADDRESS } from "./libs/constants";
 
 // Environment setup
 dotenv.config();
@@ -30,7 +29,7 @@ const { ethers } = hre;
  * TODO:
  * - figure out max fee per gas and max priority fee per gas
  * - refactor swap config to be better
- *
+ * - create a wallet and fill with limited USDC for swapping
  */
 
 async function main() {
@@ -39,7 +38,7 @@ async function main() {
   let routerProvider: BaseProvider;
   let routerChainId: ChainId;
 
-  // Routing is not supported for local forks. Must use mainnet/arb provider
+  // Routing is not supported for local forks. Must use live network provider
   if (hre.network.name === "hardhat") {
     routerProvider = new ethers.providers.JsonRpcProvider(
       (hre.network.config as any).forking.url
@@ -63,9 +62,8 @@ async function main() {
     type: SwapType.SWAP_ROUTER_02,
   };
 
-  // If on local ARB fork, wrap eth and exchange for USDC
+  // If on local fork, wrap eth and exchange for USDC
   if (hre.network.name === "hardhat") {
-    // Wrap ETH for testing on hardhat fork of mainnet
     await wrapETH(signer, ForkSwapConfig.amountIn);
     await executeSwap({
       router: router,
@@ -88,7 +86,7 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 
-interface IExecuteTypes {
+interface IExecuteSwap {
   router: AlphaRouter;
   options: SwapOptionsSwapRouter02;
   swapConfig: ISwapConfig;
@@ -96,10 +94,10 @@ interface IExecuteTypes {
 }
 
 /**
- * @param {router} - The router instance
- * @param {options} - Options for transaction
- * @param {swapConfig} - The swap configuration -> tokenIn, amountIn, tokenOut
- * @param {signer} - The signer of the transaction
+ * @param router the router instance
+ * @param options who receives the swap, slippage tolerance, deadline, swap type
+ * @param swapConfig Sets the tokenIn, amountIn, tokenOut
+ * @param signer who sends the transaction to swap
  */
 
 async function executeSwap({
@@ -107,10 +105,10 @@ async function executeSwap({
   options,
   swapConfig,
   signer,
-}: IExecuteTypes) {
+}: IExecuteSwap) {
   const { tokenIn, amountIn, tokenOut } = swapConfig;
 
-  // create the route
+  // create the route using tokenIn, amountIn, tokenOut
   const route = await router.route(
     CurrencyAmount.fromRawAmount(
       tokenIn,
@@ -125,25 +123,20 @@ async function executeSwap({
     throw new Error("No route found for the specified swap.");
   }
 
+  const txCost = (+route.estimatedGasUsedUSD.toExact()).toFixed(2);
   console.log(
-    `Route Quote ${amountIn} ${tokenIn.symbol} = ${route?.quote.toExact()} ${
-      tokenOut.symbol
-    }`
+    "Route Quote: " +
+      chalk.magenta(
+        `${amountIn} ${tokenIn.symbol} to ${route?.quote.toExact()} ${
+          tokenOut.symbol
+        } using $${txCost} worth of gas`
+      )
   );
 
-  // Approve token In to be transferred by the router
-  const tokenContract = new ethers.Contract(tokenIn.address, ERC20_ABI, signer);
-  console.log("Approving token transfer...");
-  const approveTx = await tokenContract.approve(
-    V3_SWAP_ROUTER_ADDRESS,
-    ethers.utils.parseUnits(amountIn, tokenIn.decimals)
-  );
-  const approveTxReceipt = await approveTx.wait();
-  if (approveTxReceipt.status !== 1) {
-    throw new Error("Transfer approval failed");
-  }
+  // Approve tokenIn to be transferred by the router
+  await approveToken(tokenIn.address, V3_SWAP_ROUTER_ADDRESS, amountIn, signer);
 
-  // Send the swap transaction
+  console.log("Sending swap transaction...");
   const swapTx = await signer.sendTransaction({
     data: route?.methodParameters?.calldata,
     to: V3_SWAP_ROUTER_ADDRESS,
@@ -152,18 +145,20 @@ async function executeSwap({
     maxFeePerGas: MAX_FEE_PER_GAS,
     maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
   });
-
+  console.log("txHash", chalk.blue(swapTx.hash));
   const swapTxReceipt = await swapTx.wait();
   if (swapTxReceipt.status !== 1) {
     throw new Error("Swap failed");
   }
 
-  const tokenOutContract = new ethers.Contract(
-    tokenOut.address,
-    ERC20_ABI,
-    ethers.provider
+  const tokenOutBalance = await getTokenBalance(
+    signer.address,
+    tokenOut.address
   );
-  const tokenOutBalance = await tokenOutContract.balanceOf(signer.address);
-  // prettier-ignore
-  console.log(chalk.cyan(`Swapped ${amountIn} ${tokenIn.symbol} for ${ethers.utils.formatUnits(tokenOutBalance,tokenOut.decimals)} ${tokenOut.symbol}`));
+
+  console.log(
+    chalk.yellow(
+      `Swapped ${amountIn} ${tokenIn.symbol} for ${tokenOutBalance} ${tokenOut.symbol}`
+    )
+  );
 }

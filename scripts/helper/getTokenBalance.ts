@@ -1,27 +1,29 @@
 import hre from "hardhat";
-import chalk from "chalk";
+// import chalk from "chalk";
+import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 
 /** Get token balance for a given address
+ * @param accountAddress the address to check
+ * @param tokenAddress the token address
  *
+ * @returns the token balance in human readable format
  */
 
-async function main() {
+export async function getTokenBalance(
+  accountAddress: string,
+  tokenAddress: string
+) {
   const { ethers } = hre;
   const { provider } = ethers;
 
-  const usdcContract = new ethers.Contract(
-    "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-    ["function balanceOf(address account) external view returns (uint256)"],
-    provider
-  );
+  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+  const decimals = await tokenContract.decimals();
+  const symbol = await tokenContract.symbol();
+  const rawBalance = await tokenContract.balanceOf(accountAddress);
+  const formattedBalance = ethers.utils.formatUnits(rawBalance, decimals);
 
-  const balance = await usdcContract.balanceOf(
-    "0xe0e05fD63F068c552E4D58615119A2D1700EB95D"
-  );
   // prettier-ignore
-  console.log(chalk.cyan(`Balance: ${ethers.utils.formatUnits(balance,6)}`));
-}
+  console.log((`Address: ${accountAddress} has ${formattedBalance} ${symbol}`));
 
-main().catch((error) => {
-  console.error(error);
-});
+  return formattedBalance;
+}

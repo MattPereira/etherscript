@@ -1,7 +1,7 @@
 import hre from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { networkConfig } from "../../hardhat-helper-config";
-
+import chalk from "chalk";
 const { ethers } = hre;
 
 export const WETH_ABI = [
@@ -19,24 +19,30 @@ export async function wrapETH(signer: SignerWithAddress, amount: string) {
   const network = await hre.ethers.provider.getNetwork();
   const chainId = network.chainId;
 
-  console.log(`Wrapping ${amount} ETH...`);
   const wethContract = new ethers.Contract(
     networkConfig[chainId].tokenAddress.WETH,
     WETH_ABI,
     signer
   );
 
-  const wrapTx = await wethContract.deposit({
+  console.log(`Wrapping ${amount} ETH...`);
+  const depositTx = await wethContract.deposit({
     value: ethers.utils.parseEther(amount),
   });
-  await wrapTx.wait();
+  console.log(
+    "Waiting for depositTx confirmation... \n",
+    chalk.blue(depositTx.hash)
+  );
+  await depositTx.wait();
 
   const wethBalance = await wethContract.balanceOf(signer.address);
 
   console.log(
-    `Wrapped ${amount} ETH into ${ethers.utils.formatUnits(
-      wethBalance,
-      18
-    )} WETH`
+    chalk.yellow(
+      `Wrapped ${amount} ETH into ${ethers.utils.formatUnits(
+        wethBalance,
+        18
+      )} WETH`
+    )
   );
 }
