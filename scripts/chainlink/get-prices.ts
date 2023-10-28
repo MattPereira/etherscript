@@ -54,9 +54,9 @@ async function main() {
   const ethDecimals = await ethContract.decimals();
   const linkDecimals = await linkContract.decimals();
 
-  const btcUsdPrice = ethers.formatUnits(btcData.answer, btcDecimals);
-  const ethUsdPrice = ethers.formatUnits(ethData.answer, ethDecimals);
-  const linkUsdPrice = ethers.formatUnits(linkData.answer, linkDecimals);
+  const btcUsdPrice = ethers.utils.formatUnits(btcData.answer, btcDecimals);
+  const ethUsdPrice = ethers.utils.formatUnits(ethData.answer, ethDecimals);
+  const linkUsdPrice = ethers.utils.formatUnits(linkData.answer, linkDecimals);
 
   console.log(chalk.red("BTC/USD:"), `$${btcUsdPrice}`);
   console.log(chalk.blue("ETH/USD:"), `$${ethUsdPrice}`);

@@ -2,7 +2,6 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-ethers";
 
 // import all tasks so hh makes availalbe on CLI
 import "./tasks/accounts";
@@ -12,12 +11,15 @@ import "./tasks/balance";
 const providerApiKey = process.env.ALCHEMY_API_KEY!;
 const privateKey = process.env.PRIVATE_KEY!;
 
+/**
+ * BEWARE OF THE FORK URL
+ */
 const config: HardhatUserConfig = {
   solidity: "0.8.19",
   networks: {
     hardhat: {
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
+        url: `https://arb-mainnet.alchemyapi.io/v2/${providerApiKey}`,
       },
     },
     mainnet: {

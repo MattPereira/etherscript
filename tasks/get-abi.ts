@@ -23,8 +23,11 @@ task(
       `https://api.etherscan.io/api?module=contract&action=getabi&address=${taskArgs.address}&apikey=${process.env.ETHERSCAN_API_KEY}`
     );
 
+    console.log("response", response.data);
+
     if (response.data.result) {
       const result: string = response.data.result;
+      console.log("result", result);
       const abi = JSON.parse(result);
 
       // moves back one folder i.e. "../abis"
