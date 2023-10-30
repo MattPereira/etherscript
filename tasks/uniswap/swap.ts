@@ -16,6 +16,8 @@ import {
 import { prompt } from "../../utils";
 import { addressBook } from "../../addressBook";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+// import SWAP_ROUTER_ABI from "../../abis/UniswapRouter.json";
+import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 
 /** Use smart order router to compute optimal routes and execute swaps
  * https://docs.uniswap.org/sdk/v3/guides/routing
@@ -51,22 +53,30 @@ task(
   .addParam("amount", "The human readable amount of the token to swap in")
   .addParam("out", "The symbol of the token to swap out")
   .setAction(async (taskArgs, hre) => {
+    const onHardhatNetwork = hre.network.name === "hardhat";
+    if (onHardhatNetwork) {
+      console.log("Simulating swap on local fork...");
+    } else {
+      console.log("Executing swap on live network...");
+    }
+
     const { ethers } = hre;
-
-    if (!["USDC", "wETH", "rETH"].includes(taskArgs.in)) {
-      throw new Error(`Invalid token: ${taskArgs.in}`);
-    }
-    if (!["USDC", "wETH", "rETH"].includes(taskArgs.out)) {
-      throw new Error(`Invalid token: ${taskArgs.out}`);
-    }
-
     const signer = (await ethers.getSigners())[0];
     const chainId = (await ethers.provider.getNetwork()).chainId;
+
+    const tokenList = Object.keys(addressBook[chainId].tokenAddress);
+
+    if (!tokenList.includes(taskArgs.in)) {
+      throw new Error(`Invalid token: ${taskArgs.in}`);
+    }
+    if (!tokenList.includes(taskArgs.out)) {
+      throw new Error(`Invalid token: ${taskArgs.out}`);
+    }
 
     let routerProvider: BaseProvider;
 
     // Uniswap router requires a live network provider on localhost
-    if (hre.network.name === "hardhat") {
+    if (onHardhatNetwork) {
       routerProvider = new ethers.providers.JsonRpcProvider(
         (hre.network.config as any).forking.url
       );
@@ -106,7 +116,7 @@ task(
     };
 
     // If on local fork, wrap 1 eth and exchange for SWAP_CONFIG.tokenIn
-    if (hre.network.name === "hardhat") {
+    if (onHardhatNetwork) {
       const WETH_TOKEN = await getTokenMetadata(hre, tokenAddress["wETH"]);
       const amount = "1";
       await wrapETH(hre, amount);
@@ -206,13 +216,50 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
     throw new Error("Swap failed!");
   }
 
-  // console.log(swapTxReceipt);
+  /** Parsing the logs to get the tokenOut balance
+   *
+   * @notice we dont catch all the event logs as shown on etherscan
+   * @notice we are targeting the erc20 event "Transfer"
+   * @notice we are filtering the "Tranfer" events for "to" the signer.address
+   *
+   * think there should be only one event log with "to" the signer.address
+   */
 
-  const tokenOutBalance = "tokenOutBalance";
+  const logs = swapTxReceipt.logs;
+  const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
+
+  let tokenOutAmount = "?";
+
+  const transferEventSignatureHash = erc20Interface.getEventTopic("Transfer");
+
+  // find the event log that shows amount of tokenOut received
+  const relevantLog = logs.find((log) => {
+    if (
+      log.topics &&
+      // first topic is always reserved for the event signature hash
+      log.topics[0] === transferEventSignatureHash &&
+      // only looking for the event log associated with tokenOut.address
+      log.address.toLowerCase() === tokenOut.address.toLowerCase()
+    ) {
+      const parsedLog = erc20Interface.parseLog(log);
+      console.log("parsedLog", parsedLog);
+      return parsedLog.args.to === signer.address;
+    }
+    return false;
+  });
+
+  if (relevantLog) {
+    const parsedRelevantLog = erc20Interface.parseLog(relevantLog);
+    const rawTokenOutAmount = parsedRelevantLog.args.value;
+    tokenOutAmount = ethers.utils.formatUnits(
+      rawTokenOutAmount,
+      tokenOut.decimals
+    );
+  }
 
   console.log(
     chalk.green(
-      `Swapped ${amountIn} ${tokenIn.symbol} for ${tokenOutBalance} ${tokenOut.symbol}`
+      `Swapped ${amountIn} ${tokenIn.symbol} for ${tokenOutAmount} ${tokenOut.symbol}`
     )
   );
 }

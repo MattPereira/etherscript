@@ -13,12 +13,7 @@ export async function logTxHashLink(
   txHash: string,
   hre: HardhatRuntimeEnvironment
 ) {
-  let message;
-  if (hre.network.name === "hardhat") {
-    message = `txHash: ${txHash}`;
-  } else {
-    message = `https://arbiscan.io/tx/${txHash}`;
+  if (hre.network.name !== "hardhat") {
+    console.log(chalk.blue(`https://arbiscan.io/tx/${txHash}`));
   }
-
-  console.log(chalk.blue(message));
 }
