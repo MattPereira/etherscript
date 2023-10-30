@@ -16,17 +16,13 @@ import {
 import { prompt } from "../../utils";
 import { addressBook } from "../../addressBook";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-// import SWAP_ROUTER_ABI from "../../abis/UniswapRouter.json";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 
 /** Use smart order router to compute optimal routes and execute swaps
  * https://docs.uniswap.org/sdk/v3/guides/routing
  *
- * First live swap on "Hot Script" wallet
+ * See first live swap using my "Hot Script" wallet
  * https://arbiscan.io/tx/0x7440a99dbd09cbfe55ed5e5cad947ab590cd9f0ef23fad077e49380e2a368863
- *
- * TODO:
- * - figure out max fee per gas and max priority fee per gas
  *
  * EXAMPLE:
  * hh swap --in USDC --amount 100 --out rETH
@@ -36,14 +32,6 @@ import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 const V3_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
 const MAX_FEE_PER_GAS = 170000000;
 const MAX_PRIORITY_FEE_PER_GAS = 0;
-
-type TokenKeys = "USDC" | "wETH" | "rETH";
-
-type TokenAddressMap = {
-  USDC: string;
-  wETH: string;
-  rETH: string;
-};
 
 task(
   "swap",
@@ -61,20 +49,38 @@ task(
     }
 
     const { ethers } = hre;
-    const signer = (await ethers.getSigners())[0];
+    const signer = (await ethers.getSigners())[0]; // who sends the transaction
     const chainId = (await ethers.provider.getNetwork()).chainId;
+    const recipient = signer.address; // who receives tokenOut from the swap
 
+    // validate the token symbols passed in cli
     const tokenList = Object.keys(addressBook[chainId].tokenAddress);
-
     if (!tokenList.includes(taskArgs.in)) {
-      throw new Error(`Invalid token: ${taskArgs.in}`);
+      throw new Error(`Invalid in token: ${taskArgs.in}`);
     }
     if (!tokenList.includes(taskArgs.out)) {
-      throw new Error(`Invalid token: ${taskArgs.out}`);
+      throw new Error(`Invalid out token: ${taskArgs.out}`);
     }
 
-    let routerProvider: BaseProvider;
+    const tokenAddress = addressBook[chainId].tokenAddress;
 
+    console.log("Fetching token metadata...");
+    const TOKEN_IN = await getTokenMetadata(
+      hre,
+      tokenAddress[taskArgs.in as keyof typeof tokenAddress]
+    );
+    const TOKEN_OUT = await getTokenMetadata(
+      hre,
+      tokenAddress[taskArgs.out as keyof typeof tokenAddress]
+    );
+
+    const SWAP_CONFIG = {
+      tokenIn: TOKEN_IN,
+      amountIn: "100",
+      tokenOut: TOKEN_OUT,
+    };
+
+    let routerProvider: BaseProvider;
     // Uniswap router requires a live network provider on localhost
     if (onHardhatNetwork) {
       routerProvider = new ethers.providers.JsonRpcProvider(
@@ -84,24 +90,6 @@ task(
       routerProvider = ethers.provider;
     }
 
-    const tokenAddress: TokenAddressMap = addressBook[chainId].tokenAddress;
-
-    console.log("Fetching token metadata...");
-    const TOKEN_IN = await getTokenMetadata(
-      hre,
-      tokenAddress[taskArgs.in as TokenKeys]
-    );
-    const TOKEN_OUT = await getTokenMetadata(
-      hre,
-      tokenAddress[taskArgs.out as TokenKeys]
-    );
-
-    const SWAP_CONFIG = {
-      tokenIn: TOKEN_IN,
-      amountIn: "100",
-      tokenOut: TOKEN_OUT,
-    };
-
     const router = new AlphaRouter({
       chainId: chainId,
       provider: routerProvider,
@@ -109,7 +97,7 @@ task(
 
     // Change recipient to "HOT ALT" wallet???
     const options: SwapOptionsSwapRouter02 = {
-      recipient: signer.address,
+      recipient: recipient,
       slippageTolerance: new Percent(50, 10_000),
       deadline: Math.floor(Date.now() / 1000 + 1800),
       type: SwapType.SWAP_ROUTER_02,
@@ -233,7 +221,7 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
   const transferEventSignatureHash = erc20Interface.getEventTopic("Transfer");
 
   // find the event log that shows amount of tokenOut received
-  const relevantLog = logs.find((log) => {
+  const tokenOutLog = logs.find((log) => {
     if (
       log.topics &&
       // first topic is always reserved for the event signature hash
@@ -242,15 +230,14 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
       log.address.toLowerCase() === tokenOut.address.toLowerCase()
     ) {
       const parsedLog = erc20Interface.parseLog(log);
-      console.log("parsedLog", parsedLog);
       return parsedLog.args.to === signer.address;
     }
     return false;
   });
 
-  if (relevantLog) {
-    const parsedRelevantLog = erc20Interface.parseLog(relevantLog);
-    const rawTokenOutAmount = parsedRelevantLog.args.value;
+  if (tokenOutLog) {
+    const parsedLog = erc20Interface.parseLog(tokenOutLog);
+    const rawTokenOutAmount = parsedLog.args.value;
     tokenOutAmount = ethers.utils.formatUnits(
       rawTokenOutAmount,
       tokenOut.decimals

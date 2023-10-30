@@ -39,4 +39,4 @@ const addressBook: { [key: number]: IAddressBook } = {
   },
 };
 
-export { addressBook };
+export { addressBook, IAddressBook };
