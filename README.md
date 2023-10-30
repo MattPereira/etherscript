@@ -1,16 +1,28 @@
-# Etherscript
+# 📜 Etherscript
 
-A collection of useful scripts for interacting with EVM compatible blockchains from the command line!
+A collection of useful scripts for interacting with EVM compatible blockchains from the command line
 
 #### Details
 
-- Not allowed to import hre into scripts that are imported and used by tasks
-
 ## Script Glossary
 
-#### swap
+### swap
 
-Swap tokens using the uniswap sdk.
+Swap tokens using the uniswap sdk that leverages the smart order router to compute optimal routes and execute swaps
+
+##### Required flags
+
+| Parameter | Description                                       |
+| --------- | ------------------------------------------------- |
+| `amount`  | The human readable amount of the token to swap in |
+| `in`      | The symbol of the token to swap in                |
+| `out`     | The symbol of the token to swap out               |
+
+##### Optional flags
+
+| Parameter | Description                                      |
+| --------- | ------------------------------------------------ |
+| `network` | Which network to use (defaults to local hardhat) |
 
 example usage
 
@@ -33,7 +45,7 @@ yarn hardhat run scripts/<path-to-script>
 ## Tasks Notes
 
 - good for executing code that requires parameters
-- must import into hardhat.config.ts to make available on command line
+- not allowed to import hre into scripts that are imported and used by tasks
 
 ```
 yarn hardhat <task-name> <task-params>
