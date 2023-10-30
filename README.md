@@ -2,13 +2,11 @@
 
 A collection of useful scripts for interacting with EVM compatible blockchains from the command line
 
-#### Details
-
 ## Script Glossary
 
 ### swap
 
-Swap tokens using the uniswap sdk that leverages the smart order router to compute optimal routes and execute swaps
+Swap tokens using the uniswap sdk that leverages the smart order router to compute optimal routes and execute swaps.
 
 ##### Required flags
 
@@ -24,11 +22,13 @@ Swap tokens using the uniswap sdk that leverages the smart order router to compu
 | --------- | ------------------------------------------------ |
 | `network` | Which network to use (defaults to local hardhat) |
 
-example usage
+##### Example usage
 
 ```
 hh swap --in USDC --amount 100 --out rETH
 ```
+
+_example executes swap on the local hardhat network_
 
 ## Hardhat Notes
 
