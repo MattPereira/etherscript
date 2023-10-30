@@ -1,7 +1,8 @@
-import hre from "hardhat";
 import chalk from "chalk";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { getPriceUSD, logTxHashLink } from "../helper";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { addressBook } from "../../addressBook";
 
 /** Approve token for spending by third party
  * @param tokenAddress the token address
@@ -11,27 +12,37 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
  */
 
 export async function approveToken(
+  hre: HardhatRuntimeEnvironment,
   tokenAddress: string,
   spenderAddress: string,
-  amount: string,
-  signer: SignerWithAddress
+  amount: string
 ) {
   const { ethers } = hre;
-  console.log("Approving token transfer...");
+  const signer = (await hre.ethers.getSigners())[0];
 
+  console.log("Approving token transfer...");
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
   const decimals = await tokenContract.decimals();
   const rawAmount = ethers.utils.parseUnits(amount, decimals);
 
   const approveTx = await tokenContract.approve(spenderAddress, rawAmount);
-  console.log("txHash", chalk.blue(approveTx.hash));
+  logTxHashLink(approveTx.hash, hre);
+
   const approveTxReceipt = await approveTx.wait();
   if (approveTxReceipt.status !== 1) {
     throw new Error("Transfer approval failed");
   }
-  const { effectiveGasPrice, cumulativeGasUsed } = approveTxReceipt;
-  const gasSpent = cumulativeGasUsed.mul(effectiveGasPrice);
-  console.log("Gas spent:", chalk.red(gasSpent.toString()));
+
+  const { effectiveGasPrice, cumulativeGasUsed, gasUsed } = approveTxReceipt;
+  const gasSpentWei = gasUsed.mul(effectiveGasPrice);
+  const usdPrice = await getPriceUSD(
+    hre,
+    "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612"
+  );
+
+  const usdSpent = +usdPrice * +ethers.utils.formatEther(gasSpentWei);
+
+  console.log("Spent" + " $" + usdSpent.toFixed(2) + " on gas");
 
   const allowance = await tokenContract.allowance(
     signer.address,
@@ -39,5 +50,5 @@ export async function approveToken(
   );
   const symbol = await tokenContract.symbol();
   // prettier-ignore
-  console.log((`Approved ${spenderAddress} to spend ${ethers.utils.formatUnits(allowance, decimals)} ${symbol}`));
+  console.log(chalk.green(`Approved ${spenderAddress} to spend ${ethers.utils.formatUnits(allowance, decimals)} ${symbol}`));
 }

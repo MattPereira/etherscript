@@ -1,6 +1,6 @@
-import hre from "hardhat";
 // import chalk from "chalk";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 /** Get token balance for a given address
  * @param accountAddress the address to check
@@ -10,6 +10,7 @@ import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
  */
 
 export async function getTokenBalance(
+  hre: HardhatRuntimeEnvironment,
   accountAddress: string,
   tokenAddress: string
 ) {

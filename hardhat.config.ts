@@ -5,9 +5,7 @@ import "@nomicfoundation/hardhat-toolbox";
 envEncConfig();
 
 // import all tasks so hh makes availalbe on CLI
-import "./tasks/accounts";
-import "./tasks/get-abi";
-import "./tasks/balance";
+import "./tasks";
 
 const providerApiKey = process.env.ALCHEMY_API_KEY!;
 const privateKey = process.env.PRIVATE_KEY!;
@@ -19,6 +17,8 @@ const config: HardhatUserConfig = {
   solidity: "0.8.19",
   networks: {
     hardhat: {
+      // set chainId to be arbitrum since we are forking it for testing
+      chainId: 42161,
       forking: {
         url: `https://arb-mainnet.alchemyapi.io/v2/${providerApiKey}`,
       },
@@ -34,6 +34,7 @@ const config: HardhatUserConfig = {
       accounts: [privateKey],
     },
     arbitrum: {
+      chainId: 42161,
       url: `https://arb-mainnet.g.alchemy.com/v2/${providerApiKey}`,
       accounts: [privateKey],
     },

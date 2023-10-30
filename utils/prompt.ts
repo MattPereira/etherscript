@@ -18,9 +18,7 @@ function ask(query: string): Promise<string> {
 async function prompt(query?: string): Promise<void> {
   if (!process.env.SKIP_PROMPTS) {
     if (query) console.log(`${query}\n`);
-    const reply = await ask(
-      `${chalk.green("Continue?")} Enter (y) Yes / (n) No\n`
-    );
+    const reply = await ask(`Enter (y) Yes / (n) No\n`);
     if (reply.toLowerCase() !== "y" && reply.toLowerCase() !== "yes") {
       console.log("Aborted.");
       process.exit(1);
