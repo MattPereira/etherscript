@@ -1,24 +1,6 @@
-### Harhdat Typescript Guide
+# Etherscript
 
-1. Explain the hardhat runtime environment
-2. Explain the hardhat config
-
-## Scripts
-
-- good for executing code that doesnt require parameters
-
-```
-hh run scripts/<script-name>.ts
-```
-
-## Tasks
-
-- good for executing code that requires parameters
-- must import into hardhat.config.ts to make available on command line
-
-```
-hh <task-name> <params>
-```
+A collection of useful scripts for interacting with EVM compatible blockchains from the command line!
 
 #### Details
 
@@ -34,4 +16,25 @@ example usage
 
 ```
 hh swap --in USDC --amount 100 --out rETH
+```
+
+## Hardhat Notes
+
+- hardhat.config.ts specifies the settings like imports, networks, solidity verions, etc that will all be made available through the hre (hardhat runtime environment)
+
+## Scripts Notes
+
+- good for executing code that doesnt require parameters
+
+```
+yarn hardhat run scripts/<path-to-script>
+```
+
+## Tasks Notes
+
+- good for executing code that requires parameters
+- must import into hardhat.config.ts to make available on command line
+
+```
+yarn hardhat <task-name> <task-params>
 ```
