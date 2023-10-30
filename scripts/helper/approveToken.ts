@@ -29,6 +29,9 @@ export async function approveToken(
   if (approveTxReceipt.status !== 1) {
     throw new Error("Transfer approval failed");
   }
+  const { effectiveGasPrice, cumulativeGasUsed } = approveTxReceipt;
+  const gasSpent = cumulativeGasUsed.mul(effectiveGasPrice);
+  console.log("Gas spent:", chalk.red(gasSpent.toString()));
 
   const allowance = await tokenContract.allowance(
     signer.address,

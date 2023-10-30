@@ -1,4 +1,3 @@
-import * as dotenv from "dotenv";
 import chalk from "chalk";
 import hre from "hardhat";
 import {
@@ -8,53 +7,65 @@ import {
 } from "@uniswap/smart-order-router";
 import { BaseProvider } from "@ethersproject/providers";
 import {
-  ForkSwapConfig,
-  RealSwapConfig,
-  ISwapConfig,
-  MAX_FEE_PER_GAS,
-  MAX_PRIORITY_FEE_PER_GAS,
-} from "./libs/config";
-import { Percent, CurrencyAmount, TradeType, ChainId } from "@uniswap/sdk-core";
-import { wrapETH, approveToken, getTokenBalance } from "../helper";
+  Percent,
+  CurrencyAmount,
+  TradeType,
+  ChainId,
+  Token,
+} from "@uniswap/sdk-core";
+import {
+  wrapETH,
+  approveToken,
+  getTokenBalance,
+  getTokenMetadata,
+} from "../helper";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { V3_SWAP_ROUTER_ADDRESS } from "./libs/constants";
-
+import { prompt } from "../utils";
+import { addressBook } from "../../addressBook";
 // Environment setup
-dotenv.config();
 const { ethers } = hre;
 
 /** Use smart order router to compute optimal routes and execute swaps
  * https://docs.uniswap.org/sdk/v3/guides/routing
  *
+ * First live swap on "Hot Script" wallet
+ * https://arbiscan.io/tx/0x7440a99dbd09cbfe55ed5e5cad947ab590cd9f0ef23fad077e49380e2a368863
+ *
  * TODO:
  * - figure out max fee per gas and max priority fee per gas
  * - refactor swap config to be better
- * - create a wallet and fill with limited USDC for swapping
  */
+
+// same router address on mainnet and arbitrum
+const V3_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+const MAX_FEE_PER_GAS = 170000000;
+const MAX_PRIORITY_FEE_PER_GAS = 0;
 
 async function main() {
   const signer = (await ethers.getSigners())[0];
 
   let routerProvider: BaseProvider;
-  let routerChainId: ChainId;
+  let chainId;
 
-  // Routing is not supported for local forks. Must use live network provider
   if (hre.network.name === "hardhat") {
+    // using arbitrum fork for this script
+    chainId = ChainId.ARBITRUM_ONE;
+    // Uniswap router requires a live network provider
     routerProvider = new ethers.providers.JsonRpcProvider(
       (hre.network.config as any).forking.url
     );
-    routerChainId = ChainId.ARBITRUM_ONE;
   } else {
-    routerProvider = hre.ethers.provider;
-    routerChainId = (await routerProvider.getNetwork()).chainId;
+    // use chainId and provider set by --network flag
+    chainId = (await ethers.provider.getNetwork()).chainId;
+    routerProvider = ethers.provider;
   }
 
   const router = new AlphaRouter({
-    chainId: routerChainId,
+    chainId: chainId,
     provider: routerProvider,
   });
 
-  // option to set recipient to not the signer!
+  // Change recipient to "HOT ALT" wallet???
   const options: SwapOptionsSwapRouter02 = {
     recipient: signer.address,
     slippageTolerance: new Percent(50, 10_000),
@@ -62,21 +73,37 @@ async function main() {
     type: SwapType.SWAP_ROUTER_02,
   };
 
-  // If on local fork, wrap eth and exchange for USDC
+  const WETH_TOKEN = await getTokenMetadata(addressBook[chainId].token["wETH"]);
+  const USDC_TOKEN = await getTokenMetadata(addressBook[chainId].token["USDC"]);
+  const RETH_TOKEN = await getTokenMetadata(addressBook[chainId].token["rETH"]);
+
+  const SWAP_CONFIG = {
+    tokenIn: USDC_TOKEN,
+    amountIn: "100",
+    tokenOut: RETH_TOKEN,
+  };
+
+  // If on local fork, wrap 1 eth and exchange for SWAP_CONFIG.tokenIn
   if (hre.network.name === "hardhat") {
-    await wrapETH(signer, ForkSwapConfig.amountIn);
+    const amount = "1";
+    await wrapETH(signer, amount);
     await executeSwap({
       router: router,
       options: options,
-      swapConfig: ForkSwapConfig,
+      swapConfig: {
+        tokenIn: WETH_TOKEN,
+        amountIn: amount,
+        tokenOut: SWAP_CONFIG.tokenIn,
+      },
       signer: signer,
     });
   }
-  // the real swap
+
+  // Execute the target swap
   await executeSwap({
     router: router,
     options: options,
-    swapConfig: RealSwapConfig,
+    swapConfig: SWAP_CONFIG,
     signer: signer,
   });
 }
@@ -89,7 +116,11 @@ main().catch((error) => {
 interface IExecuteSwap {
   router: AlphaRouter;
   options: SwapOptionsSwapRouter02;
-  swapConfig: ISwapConfig;
+  swapConfig: {
+    tokenIn: Token;
+    amountIn: string;
+    tokenOut: Token;
+  };
   signer: SignerWithAddress;
 }
 
@@ -124,7 +155,8 @@ async function executeSwap({
   }
 
   const txCost = (+route.estimatedGasUsedUSD.toExact()).toFixed(2);
-  console.log(
+
+  await prompt(
     "Route Quote: " +
       chalk.magenta(
         `${amountIn} ${tokenIn.symbol} to ${route?.quote.toExact()} ${
@@ -135,6 +167,10 @@ async function executeSwap({
 
   // Approve tokenIn to be transferred by the router
   await approveToken(tokenIn.address, V3_SWAP_ROUTER_ADDRESS, amountIn, signer);
+
+  // TODO: figure out how best practice for setting max fee per gas and max priority fee per gas
+  // const block = await ethers.provider.getBlock("latest");
+  // console.log(block.baseFeePerGas?.div(10 ** 9).toString());
 
   console.log("Sending swap transaction...");
   const swapTx = await signer.sendTransaction({

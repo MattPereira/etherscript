@@ -1,7 +1,8 @@
-import * as dotenv from "dotenv";
-dotenv.config();
+import { config as envEncConfig } from "@chainlink/env-enc";
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+
+envEncConfig();
 
 // import all tasks so hh makes availalbe on CLI
 import "./tasks/accounts";

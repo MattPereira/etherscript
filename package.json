@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@chainlink/contracts": "^0.8.0",
+    "@chainlink/env-enc": "^1.0.5",
     "@openzeppelin/contracts": "^5.0.0",
     "@types/chalk": "^2.2.0",
     "@uniswap/sdk-core": "^3.1.0",
@@ -40,6 +41,7 @@
     "@uniswap/v3-sdk": "^3.9.0",
     "axios": "^1.5.1",
     "chalk": "4.1.2",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "ora": "^7.0.1"
   }
 }
