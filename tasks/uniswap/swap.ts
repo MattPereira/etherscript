@@ -7,12 +7,8 @@ import {
 } from "@uniswap/smart-order-router";
 import { BaseProvider } from "@ethersproject/providers";
 import { Percent, CurrencyAmount, TradeType, Token } from "@uniswap/sdk-core";
-import {
-  wrapETH,
-  approveToken,
-  logTxHashLink,
-  getTokenMetadata,
-} from "../../scripts/helper";
+import { wrapETH, approveToken, getTokenMetadata } from "../helpers";
+import { logTxHashLink } from "../../utils";
 import { prompt } from "../../utils";
 import { addressBook } from "../../addressBook";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -21,14 +17,14 @@ import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 /** Use smart order router to compute optimal routes and execute swaps
  * https://docs.uniswap.org/sdk/v3/guides/routing
  *
- * See first live swap using my "Hot Script" wallet
+ * See first live swap tx using my "Hot Script" wallet
  * https://arbiscan.io/tx/0x7440a99dbd09cbfe55ed5e5cad947ab590cd9f0ef23fad077e49380e2a368863
  *
  * EXAMPLE:
  * hh swap --in USDC --amount 100 --out rETH
  */
 
-// CONSTANTS
+// Constants
 const V3_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
 const MAX_FEE_PER_GAS = 170000000;
 const MAX_PRIORITY_FEE_PER_GAS = 0;
@@ -53,30 +49,29 @@ task(
     const chainId = (await ethers.provider.getNetwork()).chainId;
     const recipient = signer.address; // who receives tokenOut from the swap
 
-    // validate the token symbols passed in cli
+    const tokenInSymbol =
+      taskArgs.in.toUpperCase() as keyof typeof tokenAddress;
+    const tokenOutSymbol =
+      taskArgs.out.toUpperCase() as keyof typeof tokenAddress;
+
+    // sanitize & validate the token symbols passed in cli
     const tokenList = Object.keys(addressBook[chainId].tokenAddress);
-    if (!tokenList.includes(taskArgs.in)) {
+    if (!tokenList.includes(tokenInSymbol)) {
       throw new Error(`Invalid in token: ${taskArgs.in}`);
     }
-    if (!tokenList.includes(taskArgs.out)) {
+    if (!tokenList.includes(tokenOutSymbol)) {
       throw new Error(`Invalid out token: ${taskArgs.out}`);
     }
 
-    const tokenAddress = addressBook[chainId].tokenAddress;
-
     console.log("Fetching token metadata...");
-    const TOKEN_IN = await getTokenMetadata(
-      hre,
-      tokenAddress[taskArgs.in as keyof typeof tokenAddress]
-    );
-    const TOKEN_OUT = await getTokenMetadata(
-      hre,
-      tokenAddress[taskArgs.out as keyof typeof tokenAddress]
-    );
+    const tokenAddress = addressBook[chainId].tokenAddress;
+    const TOKEN_IN = await getTokenMetadata(hre, tokenAddress[tokenInSymbol]);
+    const TOKEN_OUT = await getTokenMetadata(hre, tokenAddress[tokenOutSymbol]);
 
+    // TOKEN_IN and TOKEN_OUT must be type Token from uniswap sdk
     const SWAP_CONFIG = {
       tokenIn: TOKEN_IN,
-      amountIn: "100",
+      amountIn: taskArgs.amount,
       tokenOut: TOKEN_OUT,
     };
 
@@ -105,7 +100,7 @@ task(
 
     // If on local fork, wrap 1 eth and exchange for SWAP_CONFIG.tokenIn
     if (onHardhatNetwork) {
-      const WETH_TOKEN = await getTokenMetadata(hre, tokenAddress["wETH"]);
+      const WETH_TOKEN = await getTokenMetadata(hre, tokenAddress["WETH"]);
       const amount = "1";
       await wrapETH(hre, amount);
       await executeSwap({
@@ -184,7 +179,7 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
   }
 
   // Approve tokenIn to be transferred by the router
-  await approveToken(hre, tokenIn.address, V3_SWAP_ROUTER_ADDRESS, amountIn);
+  await approveToken(tokenIn.address, V3_SWAP_ROUTER_ADDRESS, amountIn, hre);
 
   console.log("Sending swap transaction...");
   const swapTx = await signer.sendTransaction({

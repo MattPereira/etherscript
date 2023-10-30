@@ -10,9 +10,9 @@ interface IAddressBook {
   };
   tokenAddress: {
     USDC: string;
-    wBTC: string;
-    wETH: string;
-    rETH: string;
+    WBTC: string;
+    WETH: string;
+    RETH: string;
     LINK: string;
   };
 }
@@ -30,9 +30,9 @@ const addressBook: { [key: number]: IAddressBook } = {
       V3_SWAP_ROUTER: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
     },
     tokenAddress: {
-      wBTC: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
-      wETH: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
-      rETH: "0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8",
+      WBTC: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+      WETH: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+      RETH: "0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8",
       USDC: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
       LINK: "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
     },

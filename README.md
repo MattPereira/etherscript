@@ -34,7 +34,7 @@ _example executes swap on the local hardhat network_
 
 - hardhat.config.ts specifies the settings like imports, networks, solidity verions, etc that will all be made available through the hre (hardhat runtime environment)
 
-## Scripts Notes
+### Scripts
 
 - good for executing code that doesnt require parameters
 
@@ -42,9 +42,9 @@ _example executes swap on the local hardhat network_
 yarn hardhat run scripts/<path-to-script>
 ```
 
-## Tasks Notes
+### Tasks
 
-- good for executing code that requires parameters
+- good for executing scripts that require parameters passed on the command line
 - not allowed to import hre into scripts that are imported and used by tasks
 
 ```

@@ -1,13 +1,14 @@
-import axios from "axios";
+import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 /** Get price in usd from chainlink price feed
+ * @param address the address of chainlink price feed contract
+ * @returns price of asset pair specified by price feed contract
  *
- * @param address the address of the price feed
- * @returns Token object as defined by uniswap sdk
+ * https://docs.chain.link/data-feeds/price-feeds/addresses?network=ethereum&page=1
  */
 
-export async function getPriceUSD(
+export async function getPrice(
   hre: HardhatRuntimeEnvironment,
   address: string
 ) {
@@ -54,3 +55,14 @@ export async function getPriceUSD(
   const latestRound = await priceFeed.latestRoundData();
   return ethers.utils.formatUnits(latestRound.answer, decimals);
 }
+
+task(
+  "get-price",
+  "Gets the price for a base asset in terms of a quote asset using chainlink price feeds"
+)
+  .addParam("priceFeed", "The chainlink price feed address")
+  .setAction(async (taskArgs, hre) => {
+    const price = await getPrice(hre, taskArgs.priceFeed);
+
+    console.log(`Price: ${price}`);
+  });

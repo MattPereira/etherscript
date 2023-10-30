@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import { addressBook } from "../../addressBook";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { logTxHashLink } from "./logTxHashLink";
+import { logTxHashLink } from "../../utils/logTxHashLink";
 
-export const WETH_ABI = [
+const WETH_ABI = [
   // Wrap ETH
   "function deposit() payable",
   // Unwrap ETH
@@ -20,7 +20,7 @@ export async function wrapETH(hre: HardhatRuntimeEnvironment, amount: string) {
   const chainId = network.chainId;
 
   const wethContract = new ethers.Contract(
-    addressBook[chainId].tokenAddress.wETH,
+    addressBook[chainId].tokenAddress.WETH,
     WETH_ABI,
     signer
   );

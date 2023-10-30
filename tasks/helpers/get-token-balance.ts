@@ -1,4 +1,5 @@
 // import chalk from "chalk";
+import { task } from "hardhat/config";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
@@ -28,3 +29,10 @@ export async function getTokenBalance(
 
   return formattedBalance;
 }
+
+task("get-token-balance", "Gets the token balance for a given address")
+  .addParam("account", "The account's address")
+  .addParam("token", "The token's contract address")
+  .setAction(async (taskArgs, hre) => {
+    await getTokenBalance(hre, taskArgs.account, taskArgs.token);
+  });

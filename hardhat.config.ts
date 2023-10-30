@@ -4,15 +4,15 @@ import "@nomicfoundation/hardhat-toolbox";
 
 envEncConfig();
 
-// import all tasks so hh makes availalbe on CLI
-import "./tasks";
+import "./tasks"; // makes tasks available via cli
 
 const providerApiKey = process.env.ALCHEMY_API_KEY!;
 const privateKey = process.env.PRIVATE_KEY!;
 
 /**
- * BEWARE OF THE FORK URL
+ * Configured to fork arbitrum for local testing
  */
+
 const config: HardhatUserConfig = {
   solidity: "0.8.19",
   networks: {
