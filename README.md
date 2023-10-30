@@ -23,3 +23,15 @@ hh <task-name> <params>
 #### Details
 
 - Not allowed to import hre into scripts that are imported and used by tasks
+
+## Script Glossary
+
+#### swap
+
+Swap tokens using the uniswap sdk.
+
+example usage
+
+```
+hh swap --in USDC --amount 100 --out rETH
+```
