@@ -1,5 +1,3 @@
-import hre from "hardhat";
-
 /**
  * If you have a transaction that is stuck in the mempool,
  * you can send a dummy transaction with the same nonce and a higher gas price to clear the roadblock.
@@ -8,35 +6,37 @@ import hre from "hardhat";
  *
  */
 
-async function main() {
-  const { ethers } = hre;
-  const { provider } = ethers;
-  const signer = (await ethers.getSigners())[0];
+// CONVERT TO TASK
 
-  let nonce = 305;
+// async function main() {
+//   const { ethers } = hre;
+//   const { provider } = ethers;
+//   const signer = (await ethers.getSigners())[0];
 
-  // https://docs.ethers.org/v6/api/providers/#Provider-getFeeData
-  const { maxFeePerGas, maxPriorityFeePerGas } = await provider.getFeeData();
+//   let nonce = 305;
 
-  const extraMaxFeePerGas = maxFeePerGas!.add(1000000000n);
-  const extraMaxPriorityFeePerGas = maxPriorityFeePerGas!.add(1000000000n);
+//   // https://docs.ethers.org/v6/api/providers/#Provider-getFeeData
+//   const { maxFeePerGas, maxPriorityFeePerGas } = await provider.getFeeData();
 
-  const tx = {
-    to: signer.address,
-    value: ethers.utils.parseEther("0.0"),
-    nonce: nonce,
-    maxFeePerGas: extraMaxFeePerGas,
-    maxPriorityFeePerGas: extraMaxPriorityFeePerGas,
-  };
+//   const extraMaxFeePerGas = maxFeePerGas!.add(1000000000n);
+//   const extraMaxPriorityFeePerGas = maxPriorityFeePerGas!.add(1000000000n);
 
-  console.log("sending dummy tx with nonce", nonce);
-  const txResponse = await signer.sendTransaction(tx);
-  console.log("txResponse", txResponse);
-  const txReceipt = await txResponse.wait();
-  console.log("txReceipt", txReceipt);
-}
+//   const tx = {
+//     to: signer.address,
+//     value: ethers.utils.parseEther("0.0"),
+//     nonce: nonce,
+//     maxFeePerGas: extraMaxFeePerGas,
+//     maxPriorityFeePerGas: extraMaxPriorityFeePerGas,
+//   };
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+//   console.log("sending dummy tx with nonce", nonce);
+//   const txResponse = await signer.sendTransaction(tx);
+//   console.log("txResponse", txResponse);
+//   const txReceipt = await txResponse.wait();
+//   console.log("txReceipt", txReceipt);
+// }
+
+// main().catch((error) => {
+//   console.error(error);
+//   process.exitCode = 1;
+// });

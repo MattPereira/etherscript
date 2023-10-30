@@ -20,6 +20,6 @@ hh run scripts/<script-name>.ts
 hh <task-name> <params>
 ```
 
-## TODO
+#### Details
 
-- think of scripting challenge for buidl guidl
+- Not allowed to import hre into scripts that are imported and used by tasks
