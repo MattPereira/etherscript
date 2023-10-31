@@ -19,14 +19,9 @@ import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
  * See first live swap tx using my "Hot Script" wallet
  * https://arbiscan.io/tx/0x7440a99dbd09cbfe55ed5e5cad947ab590cd9f0ef23fad077e49380e2a368863
  *
- * EXAMPLE:
+ * Example Usage
  * hh swap --in USDC --amount 100 --out rETH
  */
-
-// Constants
-const V3_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
-const MAX_FEE_PER_GAS = 170000000;
-const MAX_PRIORITY_FEE_PER_GAS = 0;
 
 task(
   "swap",
@@ -67,8 +62,7 @@ task(
     const TOKEN_IN = await getTokenMetadata(hre, tokenAddress[tokenInSymbol]);
     const TOKEN_OUT = await getTokenMetadata(hre, tokenAddress[tokenOutSymbol]);
 
-    // TOKEN_IN and TOKEN_OUT must be type Token from uniswap sdk
-    const SWAP_CONFIG = {
+    const swapConfig = {
       tokenIn: TOKEN_IN,
       amountIn: taskArgs.amount,
       tokenOut: TOKEN_OUT,
@@ -97,42 +91,33 @@ task(
       type: SwapType.SWAP_ROUTER_02,
     };
 
-    // If on local fork, wrap 1 eth and exchange for SWAP_CONFIG.tokenIn
+    // If on local fork, wrap 1 eth and exchange for swapConfig.tokenIn
     if (onHardhatNetwork) {
       const WETH_TOKEN = await getTokenMetadata(hre, tokenAddress["WETH"]);
       const amount = "1";
       await wrapETH(hre, amount);
-      await executeSwap({
-        router: router,
-        options: options,
-        swapConfig: {
-          tokenIn: WETH_TOKEN,
-          amountIn: amount,
-          tokenOut: SWAP_CONFIG.tokenIn,
-        },
-        hre,
-      });
+      const forkSwapConfig = {
+        tokenIn: WETH_TOKEN,
+        amountIn: amount,
+        tokenOut: swapConfig.tokenIn,
+      };
+      await executeSwap(router, options, forkSwapConfig, hre);
     }
 
     // Execute the target swap
-    await executeSwap({
-      hre,
-      router: router,
-      options: options,
-      swapConfig: SWAP_CONFIG,
-    });
+    await executeSwap(router, options, swapConfig, hre);
   });
 
-interface IExecuteSwap {
-  hre: HardhatRuntimeEnvironment;
-  router: AlphaRouter;
-  options: SwapOptionsSwapRouter02;
-  swapConfig: {
-    tokenIn: Token;
-    amountIn: string;
-    tokenOut: Token;
-  };
-}
+// interface IExecuteSwap {
+//   hre: HardhatRuntimeEnvironment;
+//   router: AlphaRouter;
+//   options: SwapOptionsSwapRouter02;
+//   swapConfig: {
+//     tokenIn: Token;
+//     amountIn: string;
+//     tokenOut: Token;
+//   };
+// }
 
 /**
  * @param router the router instance
@@ -141,9 +126,20 @@ interface IExecuteSwap {
  * @param signer who sends the transaction to swap
  */
 
-async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
+async function executeSwap(
+  router: AlphaRouter,
+  options: SwapOptionsSwapRouter02,
+  swapConfig: {
+    tokenIn: Token;
+    amountIn: string;
+    tokenOut: Token;
+  },
+  hre: HardhatRuntimeEnvironment
+) {
   const { ethers } = hre;
   const signer = (await ethers.getSigners())[0];
+  const chainId = (await ethers.provider.getNetwork()).chainId;
+  const V3_SWAP_ROUTER_ADDRESS = addressBook[chainId].uniswap.V3_SWAP_ROUTER;
   const { tokenIn, amountIn, tokenOut } = swapConfig;
 
   // create the route using tokenIn, amountIn, tokenOut
