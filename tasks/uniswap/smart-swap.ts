@@ -1,24 +1,20 @@
-import { config as envEncConfig } from "@chainlink/env-enc";
-import { task, types } from "hardhat/config";
 import chalk from "chalk";
+import { task, types } from "hardhat/config";
+import { BaseProvider } from "@ethersproject/providers";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { config as envEncConfig } from "@chainlink/env-enc";
+import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
+// internal helper functions
+import { wrapETH, approveToken, getTokenMetadata } from "../helpers";
+import { logTxHashLink, prompt, getGasSpentInUSD } from "../../utils";
+import { addressBook } from "../../addressBook";
+// uniswap sdk imports
+import { Percent, CurrencyAmount, TradeType, Token } from "@uniswap/sdk-core";
 import {
   AlphaRouter,
   SwapOptionsSwapRouter02,
   SwapType,
 } from "@uniswap/smart-order-router";
-import { BaseProvider } from "@ethersproject/providers";
-import {
-  Percent,
-  CurrencyAmount,
-  TradeType,
-  Token,
-  ChainId,
-} from "@uniswap/sdk-core";
-import { wrapETH, approveToken, getTokenMetadata, getPrice } from "../helpers";
-import { logTxHashLink, prompt, getGasSpentInUSD } from "../../utils";
-import { addressBook } from "../../addressBook";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 
 envEncConfig();
 

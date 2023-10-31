@@ -9,6 +9,7 @@ A collection of useful scripts for interacting with EVM compatible blockchains f
   - [Tasks](#tasks)
 - [Script Glossary](#script-glossary)
   - [smart-swap](#smart-swap)
+  - [get-price](#get-price)
   - [get-abi](#get-abi)
 
 ## Environment Variable Management
@@ -84,7 +85,7 @@ Swap tokens using the uniswap sdk that leverages the smart order router to compu
 
 ##### Example usage
 
-Execute swap on the local hardhat network that is configured as fork of arbitrum
+Execute a swap on the local hardhat network that is configured as fork of arbitrum
 
 ```
 yarn hardhat swap --in USDC --amount 100 --out rETH
@@ -113,14 +114,14 @@ Gets the price for a base asset in terms of a quote asset using chainlink price 
 
 ##### Required flags
 
-##### Required flags
-
 | Parameter  | Description                               |
 | ---------- | ----------------------------------------- |
 | `contract` | The chainlink price feed contract address |
 
 ##### Example usage
 
-```
+Fetch the price of ETH in USD on mainnet
 
+```
+yarn hardhat get-price --contract 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419 --network mainnet
 ```

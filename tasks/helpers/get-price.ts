@@ -15,12 +15,6 @@ export async function getPrice(
 ) {
   const { ethers } = hre;
 
-  // force mainnet for price feeds
-  const mainnetURL = (hre.config.networks.mainnet as any).url;
-  const provider = new ethers.providers.JsonRpcProvider(mainnetURL);
-
-  console.log("address", address);
-
   const priceFeed = new ethers.Contract(
     address,
     [
@@ -45,7 +39,7 @@ export async function getPrice(
         type: "function",
       },
     ],
-    provider
+    ethers.provider
   );
 
   const decimals = await priceFeed.decimals();
