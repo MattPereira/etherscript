@@ -1,3 +1,4 @@
+import { task } from "hardhat/config";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 import { Token, ChainId } from "@uniswap/sdk-core";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -15,10 +16,22 @@ export async function getTokenMetadata(
   const { ethers } = hre;
   const { provider } = ethers;
 
+  const chainId = (await ethers.provider.getNetwork()).chainId;
+
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
   const decimals = await tokenContract.decimals();
   const symbol = await tokenContract.symbol();
   const name = await tokenContract.name();
 
-  return new Token(ChainId.ARBITRUM_ONE, tokenAddress, decimals, symbol, name);
+  return new Token(chainId, tokenAddress, decimals, symbol, name);
 }
+
+task(
+  "get-token-metadata",
+  "Gets the token metadata for a given token contract address"
+)
+  .addParam("address", "The token contract's address")
+  .setAction(async (taskArgs, hre) => {
+    const metadata = await getTokenMetadata(hre, taskArgs.address);
+    console.log(metadata);
+  });

@@ -14,6 +14,6 @@ export async function logTxHashLink(
   hre: HardhatRuntimeEnvironment
 ) {
   if (hre.network.name !== "hardhat") {
-    console.log(chalk.blue(`https://arbiscan.io/tx/${txHash}`));
+    console.log(chalk.blue(`  https://arbiscan.io/tx/${txHash}`));
   }
 }

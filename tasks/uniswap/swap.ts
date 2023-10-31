@@ -180,14 +180,21 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
   // Approve tokenIn to be transferred by the router
   await approveToken(tokenIn.address, V3_SWAP_ROUTER_ADDRESS, amountIn, hre);
 
+  const { maxFeePerGas, maxPriorityFeePerGas } =
+    await ethers.provider.getFeeData();
+
+  if (!maxFeePerGas || !maxPriorityFeePerGas) {
+    throw new Error("Failed to fetch gas fee data");
+  }
+
   console.log("Sending swap transaction...");
   const swapTx = await signer.sendTransaction({
     data: route?.methodParameters?.calldata,
     to: V3_SWAP_ROUTER_ADDRESS,
     value: route?.methodParameters?.value,
     from: signer.address,
-    maxFeePerGas: MAX_FEE_PER_GAS,
-    maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+    maxFeePerGas: maxFeePerGas,
+    maxPriorityFeePerGas: maxPriorityFeePerGas,
   });
 
   logTxHashLink(swapTx.hash, hre);
@@ -200,23 +207,11 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
 
   const gasSpentInUSD = await getGasSpentInUSD(swapTxReceipt, hre);
 
-  /** Parsing the logs to get the tokenOut balance
-   *
-   * @notice we dont catch all the event logs as shown on etherscan
-   * @notice we are targeting the erc20 event "Transfer"
-   * @notice we are filtering the "Tranfer" events for "to" the signer.address
-   *
-   * think there should be only one event log with "to" the signer.address
-   */
-
   const logs = swapTxReceipt.logs;
+  // set up interface to parse the logs
   const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
-
-  let tokenOutAmount = "?";
-
+  // looking for the "Transfer" event
   const transferEventSignatureHash = erc20Interface.getEventTopic("Transfer");
-
-  // find the event log that shows amount of tokenOut received
   const tokenOutLog = logs.find((log) => {
     if (
       log.topics &&
@@ -226,11 +221,13 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
       log.address.toLowerCase() === tokenOut.address.toLowerCase()
     ) {
       const parsedLog = erc20Interface.parseLog(log);
-      return parsedLog.args.to === signer.address;
+      // only looking for the event log where the "to" address is the recipient
+      return parsedLog.args.to === options.recipient;
     }
     return false;
   });
 
+  let tokenOutAmount = "?";
   if (tokenOutLog) {
     const parsedLog = erc20Interface.parseLog(tokenOutLog);
     const rawTokenOutAmount = parsedLog.args.value;

@@ -1,14 +1,14 @@
 interface IAddressBook {
   name: string;
-  chainlink?: {
+  chainlink: {
     priceFeedAddress: {
       ETH_USD: string;
     };
   };
-  uniswap?: {
+  uniswap: {
     V3_SWAP_ROUTER: string;
   };
-  tokenAddress?: {
+  tokenAddress: {
     USDC: string;
     WBTC: string;
     WETH: string;
@@ -25,6 +25,16 @@ const addressBook: { [key: number]: IAddressBook } = {
       priceFeedAddress: {
         ETH_USD: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
       },
+    },
+    uniswap: {
+      V3_SWAP_ROUTER: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+    },
+    tokenAddress: {
+      WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+      WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      RETH: "0xae78736Cd615f374D3085123A210448E74Fc6393",
+      USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      LINK: "0x514910771AF9Ca656af840dff83E8264EcF986CA",
     },
   },
   42161: {
