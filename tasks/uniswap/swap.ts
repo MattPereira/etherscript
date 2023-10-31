@@ -30,7 +30,7 @@ envEncConfig();
  */
 
 task(
-  "swap",
+  "smart-swap",
   "Use the uniswap smart order router to compute optimal routes and execute a swap between two tokens"
 )
   .addParam("in", "The symbol of the token to swap in")

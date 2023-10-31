@@ -16,8 +16,11 @@ task(
   "get-abi",
   "Fetches abi from etherscan API and outputs .json to abi folder"
 )
-  .addParam("address", "The contract address")
-  .addParam("name", "The name for the file that will be output")
+  .addParam(
+    "contract",
+    "The target contract address (must be verified on etherscan)"
+  )
+  .addParam("fileName", "The name for the file that will be output")
   .setAction(async (taskArgs, hre) => {
     const response = await axios.get(
       `https://api.etherscan.io/api?module=contract&action=getabi&address=${taskArgs.address}&apikey=${process.env.ETHERSCAN_API_KEY}`

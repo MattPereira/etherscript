@@ -46,6 +46,8 @@ npx env-enc remove SOME_ENV_VAR_NAME
 
 - `hardhat.config.ts` specifies the settings like imports, networks, solidity verions, etc that will all be made available through the hre (hardhat runtime environment)
 
+- all scripts and tasks are by default executed on the local hardhat network, but can be configured to run on other networks by passing the `--network` flag
+
 ### Scripts
 
 - good for executing code that doesnt require parameters
@@ -65,7 +67,7 @@ yarn hardhat <task-name> <task-params>
 
 ## Script Glossary
 
-### swap
+### smart-swap
 
 Swap tokens using the uniswap sdk that leverages the smart order router to compute optimal routes and execute swaps.
 
@@ -77,16 +79,27 @@ Swap tokens using the uniswap sdk that leverages the smart order router to compu
 | `in`      | The symbol of the token to swap in                |
 | `out`     | The symbol of the token to swap out               |
 
-##### Optional flags
+##### Example usage
 
-| Parameter | Description                                      |
-| --------- | ------------------------------------------------ |
-| `network` | Which network to use (defaults to local hardhat) |
+Execute swap on the local hardhat network that is configured as fork of arbitrum
+
+```
+yarn hardhat swap --in USDC --amount 100 --out rETH
+```
+
+### get-abi
+
+Fetches abi from etherscan API and outputs the result to a .json file inside the `./abis` directory
+
+##### Required flags
+
+| Parameter   | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| `contract`  | The target contract address (must be verified on etherscan)   |
+| `file-name` | The name for the file that will be output into abis directory |
 
 ##### Example usage
 
 ```
-hh swap --in USDC --amount 100 --out rETH
+yarn hardhat get-abi --contract 0x514910771AF9Ca656af840dff83E8264EcF986CA --file-name link-token-abi --network mainnet
 ```
-
-_example executes swap on the local hardhat network that is configured as fork of arbitrum_
