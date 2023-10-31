@@ -22,18 +22,16 @@ import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
 
 envEncConfig();
 
-/** Use smart order router to compute optimal routes and execute swaps
+/** Use uniswap's smart order router to compute optimal routes and execute swaps
  * https://docs.uniswap.org/sdk/v3/guides/routing
  *
- * See first live swap tx using my "Hot Script" wallet
- * https://arbiscan.io/tx/0x7440a99dbd09cbfe55ed5e5cad947ab590cd9f0ef23fad077e49380e2a368863
- *
- * recipient: 0xe0e05fD63F068c552E4D58615119A2D1700EB95D
+ * @notice the default recipient is the signer, you can choose any account to receive the swap
+ *  by setting RECIPIENT_WALLET_ADDRESS env var via the command `npx env-enc set`
  */
 
 task(
   "swap",
-  "Use uniswap smart order router to execute swap between two tokens"
+  "Use the uniswap smart order router to compute optimal routes and execute a swap between two tokens"
 )
   .addParam("in", "The symbol of the token to swap in")
   .addParam("amount", "The human readable amount of the token to swap in")
@@ -111,8 +109,8 @@ task(
     }
 
     // set the recipient of swap to my "Hot Alt" wallet
-    if (process.env.HOT_ALT_WALLET_ADDRESS) {
-      options.recipient = process.env.HOT_ALT_WALLET_ADDRESS;
+    if (process.env.RECIPIENT_WALLET_ADDRESS) {
+      options.recipient = process.env.RECIPIENT_WALLET_ADDRESS;
     }
 
     // The actual swap

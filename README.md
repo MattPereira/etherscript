@@ -25,7 +25,7 @@ Swap tokens using the uniswap sdk that leverages the smart order router to compu
 ##### Example usage
 
 ```
-hh swap --in USDC --amount 100 --out rETH
+yarn hardhat swap --in USDC --amount 100 --out rETH
 ```
 
 _example executes swap on the local hardhat network_
@@ -33,6 +33,7 @@ _example executes swap on the local hardhat network_
 ## Hardhat Guide
 
 - `hardhat.config.ts` specifies the settings like imports, networks, solidity verions, etc that will all be made available through the hre (hardhat runtime environment)
+- Run `yarn global add hardhat-shorthand` if you would like to run your hardhat comands with `hh` instead of `yarn hardhat`
 
 ### Scripts
 
