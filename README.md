@@ -73,7 +73,7 @@ yarn hardhat NAME_OF_TASK --NAME_OF_FLAG VALUE_OF_FLAG
 
 ### smart-swap
 
-Swap tokens using the uniswap sdk that leverages the smart order router to compute optimal routes and execute swaps.
+Swap tokens using uniswap's smart order router that computes the optimal route before executing the swap.
 
 ##### Required flags
 
@@ -88,7 +88,7 @@ Swap tokens using the uniswap sdk that leverages the smart order router to compu
 Execute a swap on the local hardhat network that is configured as fork of arbitrum
 
 ```
-yarn hardhat swap --in USDC --amount 100 --out rETH
+yarn hardhat smart-swap --in USDC --amount 100 --out rETH
 ```
 
 ### get-abi
