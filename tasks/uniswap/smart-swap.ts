@@ -18,11 +18,9 @@ import {
 
 envEncConfig();
 
-/** Use uniswap's smart order router to compute optimal routes and execute swaps
+/** Task to execute a swap between two tokens
+ * using uniswap's smart order router to compute the optimal routes
  * https://docs.uniswap.org/sdk/v3/guides/routing
- *
- * @notice the default recipient is the signer, you can choose any account to receive the swap
- *  by setting RECIPIENT_WALLET_ADDRESS env var via the command `npx env-enc set`
  */
 
 task(
@@ -58,13 +56,12 @@ task(
     }
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
-
     const tokenInSymbol =
       taskArgs.in.toUpperCase() as keyof typeof tokenAddress;
     const tokenOutSymbol =
       taskArgs.out.toUpperCase() as keyof typeof tokenAddress;
 
-    // sanitize & validate the token symbols passed in cli
+    // sanitize & validate the token symbols passed via command line
     const tokenList = Object.keys(addressBook[chainId].tokenAddress);
     if (!tokenList.includes(tokenInSymbol)) {
       throw new Error(`Invalid in token: ${taskArgs.in}`);
@@ -108,13 +105,15 @@ async function generateRoute(
   hre: HardhatRuntimeEnvironment
 ): Promise<SwapRoute> {
   const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+
   let provider: BaseProvider;
-  // Uniswap router requires a live network provider on localhost
   if (hre.network.name === "hardhat") {
+    // uniswap router requires a live network provider even on localhost fork
     provider = new hre.ethers.providers.JsonRpcProvider(
       (hre.network.config as any).forking.url
     );
   } else {
+    // use the default provider if on live network
     provider = hre.ethers.provider;
   }
 
