@@ -48,14 +48,14 @@ npx env-enc remove SOME_ENV_VAR_NAME
 
 - `hardhat.config.ts` specifies the settings like imports, networks, solidity verions, etc that will all be made available through the hre (hardhat runtime environment)
 
-- all scripts and tasks are by default executed on the local hardhat network, but can be configured to run on other networks by passing the `--network` flag
+- all scripts and tasks are by default executed on the local hardhat network, but can be configured to run on other networks by passing the `--network` flag .i.e. `yarn hardhat NAME_OF_TASK --network arbitrum`
 
 ### Scripts
 
 - good for executing code that doesnt require parameters
 
 ```
-yarn hardhat run scripts/<path-to-script>
+yarn hardhat run scripts/PATH_TO_SCRIPT.ts
 ```
 
 ### Tasks
@@ -66,7 +66,7 @@ yarn hardhat run scripts/<path-to-script>
 - not allowed to import hre into scripts that are imported and used by tasks
 
 ```
-yarn hardhat <task-name> <task-params>
+yarn hardhat NAME_OF_TASK --NAME_OF_FLAG VALUE_OF_FLAG
 ```
 
 ## Script Glossary

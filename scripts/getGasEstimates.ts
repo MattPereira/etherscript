@@ -10,7 +10,7 @@ async function main() {
     if (value !== null) {
       console.log(
         `${key}: ${value.toString()} wei`,
-        `( ${ethers.utils.formatUnits(value, "gwei")} gwei )`
+        `(${ethers.utils.formatUnits(value, "gwei")} gwei)`
       );
     }
   }
