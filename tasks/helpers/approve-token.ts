@@ -1,8 +1,8 @@
 import chalk from "chalk";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
-import { getPrice } from "../helpers";
 import { logTxHashLink } from "../../utils";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { getGasSpentInUSD } from "../../utils/getGasSpentInUSD";
 
 /** Approve token for spending by third party
  * @param tokenAddress the token address
@@ -32,17 +32,7 @@ export async function approveToken(
     throw new Error("Transfer approval failed");
   }
 
-  const { effectiveGasPrice, cumulativeGasUsed, gasUsed } = approveTxReceipt;
-  const gasSpentWei = gasUsed.mul(effectiveGasPrice);
-  // using the ETH/USD price feed from the chainlink contract deployed on arbitrum?
-  const usdPrice = await getPrice(
-    hre,
-    "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612"
-  );
-
-  const usdSpent = +usdPrice * +ethers.utils.formatEther(gasSpentWei);
-
-  console.log("Spent" + " $" + usdSpent.toFixed(2) + " on gas");
+  const gasSpentInUSD = await getGasSpentInUSD(approveTxReceipt, hre);
 
   const allowance = await tokenContract.allowance(
     signer.address,
@@ -50,5 +40,5 @@ export async function approveToken(
   );
   const symbol = await tokenContract.symbol();
   // prettier-ignore
-  console.log(chalk.green(`Approved ${spenderAddress} to spend ${ethers.utils.formatUnits(allowance, decimals)} ${symbol}`));
+  console.log(chalk.green(`Approved ${spenderAddress} to spend ${ethers.utils.formatUnits(allowance, decimals)} ${symbol} using ${gasSpentInUSD} worth of gas`));
 }

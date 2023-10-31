@@ -1,7 +1,8 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-/** Get price in usd from chainlink price feed
+/** Get price from chainlink price feed contract on ethereum mainnet
+ *
  * @param address the address of chainlink price feed contract
  * @returns price of asset pair specified by price feed contract
  *
@@ -14,15 +15,9 @@ export async function getPrice(
 ) {
   const { ethers } = hre;
 
-  let provider;
-
-  if (hre.network.name === "hardhat") {
-    provider = new ethers.providers.JsonRpcProvider(
-      (hre.network.config as any).forking.url
-    );
-  } else {
-    provider = ethers.provider;
-  }
+  // force mainnet for price feeds
+  const mainnetURL = (hre.config.networks.mainnet as any).url;
+  const provider = new ethers.providers.JsonRpcProvider(mainnetURL);
 
   const priceFeed = new ethers.Contract(
     address,

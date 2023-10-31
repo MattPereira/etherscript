@@ -1,6 +1,6 @@
 interface IAddressBook {
   name: string;
-  chainlink: {
+  chainlink?: {
     priceFeedAddress: {
       ETH_USD: string;
     };
@@ -8,7 +8,7 @@ interface IAddressBook {
   uniswap?: {
     V3_SWAP_ROUTER: string;
   };
-  tokenAddress: {
+  tokenAddress?: {
     USDC: string;
     WBTC: string;
     WETH: string;
@@ -19,6 +19,14 @@ interface IAddressBook {
 
 // Lookup contract address by chainId
 const addressBook: { [key: number]: IAddressBook } = {
+  1: {
+    name: "mainnet",
+    chainlink: {
+      priceFeedAddress: {
+        ETH_USD: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+      },
+    },
+  },
   42161: {
     name: "arbitrum",
     chainlink: {

@@ -8,8 +8,7 @@ import {
 import { BaseProvider } from "@ethersproject/providers";
 import { Percent, CurrencyAmount, TradeType, Token } from "@uniswap/sdk-core";
 import { wrapETH, approveToken, getTokenMetadata } from "../helpers";
-import { logTxHashLink } from "../../utils";
-import { prompt } from "../../utils";
+import { logTxHashLink, prompt, getGasSpentInUSD } from "../../utils";
 import { addressBook } from "../../addressBook";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
@@ -199,6 +198,8 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
     throw new Error("Swap failed!");
   }
 
+  const gasSpentInUSD = await getGasSpentInUSD(swapTxReceipt, hre);
+
   /** Parsing the logs to get the tokenOut balance
    *
    * @notice we dont catch all the event logs as shown on etherscan
@@ -241,7 +242,7 @@ async function executeSwap({ router, options, swapConfig, hre }: IExecuteSwap) {
 
   console.log(
     chalk.green(
-      `Swapped ${amountIn} ${tokenIn.symbol} for ${tokenOutAmount} ${tokenOut.symbol}`
+      `Swapped ${amountIn} ${tokenIn.symbol} for ${tokenOutAmount} ${tokenOut.symbol} using ${gasSpentInUSD} worth of gas`
     )
   );
 }

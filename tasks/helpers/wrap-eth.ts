@@ -20,7 +20,7 @@ export async function wrapETH(hre: HardhatRuntimeEnvironment, amount: string) {
   const chainId = network.chainId;
 
   const wethContract = new ethers.Contract(
-    addressBook[chainId].tokenAddress.WETH,
+    addressBook[chainId].tokenAddress?.WETH!,
     WETH_ABI,
     signer
   );
