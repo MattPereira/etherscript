@@ -10,8 +10,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
  */
 
 export async function getPrice(
-  hre: HardhatRuntimeEnvironment,
-  address: string
+  address: string,
+  hre: HardhatRuntimeEnvironment
 ) {
   const { ethers } = hre;
 
@@ -57,7 +57,7 @@ task(
 )
   .addParam("priceFeed", "The chainlink price feed address")
   .setAction(async (taskArgs, hre) => {
-    const price = await getPrice(hre, taskArgs.priceFeed);
+    const price = await getPrice(taskArgs.priceFeed, hre);
 
     console.log(`Price: ${price}`);
   });

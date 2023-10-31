@@ -30,9 +30,9 @@ hh swap --in USDC --amount 100 --out rETH
 
 _example executes swap on the local hardhat network_
 
-## Hardhat Notes
+## Hardhat Guide
 
-- hardhat.config.ts specifies the settings like imports, networks, solidity verions, etc that will all be made available through the hre (hardhat runtime environment)
+- `hardhat.config.ts` specifies the settings like imports, networks, solidity verions, etc that will all be made available through the hre (hardhat runtime environment)
 
 ### Scripts
 
@@ -49,4 +49,36 @@ yarn hardhat run scripts/<path-to-script>
 
 ```
 yarn hardhat <task-name> <task-params>
+```
+
+## Environment Variable Management
+
+This repository uses the NPM package `@chainlink/env-enc` to keep private keys, RPC URLs, and other secrets encrypted at rest. This helps reduce the risk of leaking your private key.
+
+The '@chainlink/env-enc`package will store your encrypted environment variables in a file named`.env.enc`in the root directory of this repository. Ensure that your .gitignore file includes`.env.enc`
+
+### Usage
+
+Set the encryption password by running the command
+
+```
+npx env-enc set-pw
+```
+
+Set a new environment variable by running the command
+
+```
+npx env-enc set
+```
+
+See all your currently set environment variables
+
+```
+npx env-enc view
+```
+
+Remove an environment variable
+
+```
+npx env-enc remove SOME_ENV_VAR_NAME
 ```

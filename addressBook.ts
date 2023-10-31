@@ -2,7 +2,9 @@ interface IAddressBook {
   name: string;
   chainlink: {
     priceFeedAddress: {
+      BTC_USD: string;
       ETH_USD: string;
+      LINK_USD: string;
     };
   };
   uniswap: {
@@ -23,7 +25,9 @@ const addressBook: { [key: number]: IAddressBook } = {
     name: "mainnet",
     chainlink: {
       priceFeedAddress: {
+        BTC_USD: "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c",
         ETH_USD: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+        LINK_USD: "0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c",
       },
     },
     uniswap: {
@@ -41,7 +45,9 @@ const addressBook: { [key: number]: IAddressBook } = {
     name: "arbitrum",
     chainlink: {
       priceFeedAddress: {
+        BTC_USD: "0x6ce185860a4963106506C203335A2910413708e9",
         ETH_USD: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+        LINK_USD: "0x86E53CF1B870786351Da77A57575e79CB55812CB",
       },
     },
     uniswap: {

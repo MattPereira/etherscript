@@ -1,3 +1,4 @@
+import { config as envEncConfig } from "@chainlink/env-enc";
 import { task } from "hardhat/config";
 import chalk from "chalk";
 import {
@@ -6,12 +7,20 @@ import {
   SwapType,
 } from "@uniswap/smart-order-router";
 import { BaseProvider } from "@ethersproject/providers";
-import { Percent, CurrencyAmount, TradeType, Token } from "@uniswap/sdk-core";
-import { wrapETH, approveToken, getTokenMetadata } from "../helpers";
+import {
+  Percent,
+  CurrencyAmount,
+  TradeType,
+  Token,
+  ChainId,
+} from "@uniswap/sdk-core";
+import { wrapETH, approveToken, getTokenMetadata, getPrice } from "../helpers";
 import { logTxHashLink, prompt, getGasSpentInUSD } from "../../utils";
 import { addressBook } from "../../addressBook";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
+
+envEncConfig();
 
 /** Use smart order router to compute optimal routes and execute swaps
  * https://docs.uniswap.org/sdk/v3/guides/routing
@@ -19,8 +28,7 @@ import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
  * See first live swap tx using my "Hot Script" wallet
  * https://arbiscan.io/tx/0x7440a99dbd09cbfe55ed5e5cad947ab590cd9f0ef23fad077e49380e2a368863
  *
- * Example Usage
- * hh swap --in USDC --amount 100 --out rETH
+ * recipient: 0xe0e05fD63F068c552E4D58615119A2D1700EB95D
  */
 
 task(
@@ -31,6 +39,7 @@ task(
   .addParam("amount", "The human readable amount of the token to swap in")
   .addParam("out", "The symbol of the token to swap out")
   .setAction(async (taskArgs, hre) => {
+    const { ethers } = hre;
     const onHardhatNetwork = hre.network.name === "hardhat";
     if (onHardhatNetwork) {
       console.log("Simulating swap on local fork...");
@@ -38,10 +47,7 @@ task(
       console.log("Executing swap on live network...");
     }
 
-    const { ethers } = hre;
-    const signer = (await ethers.getSigners())[0]; // who sends the transaction
     const chainId = (await ethers.provider.getNetwork()).chainId;
-    const recipient = signer.address; // who receives tokenOut from the swap
 
     const tokenInSymbol =
       taskArgs.in.toUpperCase() as keyof typeof tokenAddress;
@@ -83,9 +89,8 @@ task(
       provider: routerProvider,
     });
 
-    // Change recipient to "HOT ALT" wallet???
     const options: SwapOptionsSwapRouter02 = {
-      recipient: recipient,
+      recipient: await ethers.provider.getSigner(0).getAddress(),
       slippageTolerance: new Percent(50, 10_000),
       deadline: Math.floor(Date.now() / 1000 + 1800),
       type: SwapType.SWAP_ROUTER_02,
@@ -101,25 +106,20 @@ task(
         amountIn: amount,
         tokenOut: swapConfig.tokenIn,
       };
+
       await executeSwap(router, options, forkSwapConfig, hre);
     }
 
-    // Execute the target swap
+    // set the recipient of swap to my "Hot Alt" wallet
+    if (process.env.HOT_ALT_WALLET_ADDRESS) {
+      options.recipient = process.env.HOT_ALT_WALLET_ADDRESS;
+    }
+
+    // The actual swap
     await executeSwap(router, options, swapConfig, hre);
   });
 
-// interface IExecuteSwap {
-//   hre: HardhatRuntimeEnvironment;
-//   router: AlphaRouter;
-//   options: SwapOptionsSwapRouter02;
-//   swapConfig: {
-//     tokenIn: Token;
-//     amountIn: string;
-//     tokenOut: Token;
-//   };
-// }
-
-/**
+/** Function to execute the swap tx
  * @param router the router instance
  * @param options who receives the swap, slippage tolerance, deadline, swap type
  * @param swapConfig Sets the tokenIn, amountIn, tokenOut

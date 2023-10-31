@@ -22,8 +22,8 @@ export async function getGasSpentInUSD(
 
   // gas is always paid in ETH
   const usdPrice = await getPrice(
-    hre,
-    addressBook[ChainId.MAINNET].chainlink?.priceFeedAddress.ETH_USD!
+    addressBook[ChainId.MAINNET].chainlink?.priceFeedAddress.ETH_USD!,
+    hre
   );
 
   const usdSpent = +usdPrice * +ethers.utils.formatEther(gasSpentWei);
