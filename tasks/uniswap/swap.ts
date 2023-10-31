@@ -1,5 +1,5 @@
 import { config as envEncConfig } from "@chainlink/env-enc";
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import chalk from "chalk";
 import {
   AlphaRouter,
@@ -33,9 +33,27 @@ task(
   "smart-swap",
   "Use the uniswap smart order router to compute optimal routes and execute a swap between two tokens"
 )
-  .addParam("in", "The symbol of the token to swap in")
-  .addParam("amount", "The human readable amount of the token to swap in")
-  .addParam("out", "The symbol of the token to swap out")
+  .addParam(
+    "in",
+    "The symbol of the token to swap in",
+    undefined,
+    types.string,
+    false
+  )
+  .addParam(
+    "amount",
+    "The human readable amount of the token to swap in",
+    undefined,
+    types.int,
+    false
+  )
+  .addParam(
+    "out",
+    "The symbol of the token to swap out",
+    undefined,
+    types.string,
+    false
+  )
   .setAction(async (taskArgs, hre) => {
     const { ethers } = hre;
     const onHardhatNetwork = hre.network.name === "hardhat";
@@ -68,7 +86,7 @@ task(
 
     const swapConfig = {
       tokenIn: TOKEN_IN,
-      amountIn: taskArgs.amount,
+      amountIn: taskArgs.amount.toString(),
       tokenOut: TOKEN_OUT,
     };
 

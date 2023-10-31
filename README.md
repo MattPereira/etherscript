@@ -8,7 +8,8 @@ A collection of useful scripts for interacting with EVM compatible blockchains f
   - [Scripts](#scripts)
   - [Tasks](#tasks)
 - [Script Glossary](#script-glossary)
-  - [swap](#swap)
+  - [smart-swap](#smart-swap)
+  - [get-abi](#get-abi)
 
 ## Environment Variable Management
 
@@ -59,6 +60,8 @@ yarn hardhat run scripts/<path-to-script>
 ### Tasks
 
 - good for executing scripts that require parameters passed on the command line
+- to see all availalble tasks run `yarn hardhat`
+- to see which flags you need to pass run `yarn hardhat NAME_OF_TASK --help`
 - not allowed to import hre into scripts that are imported and used by tasks
 
 ```
@@ -102,4 +105,22 @@ Fetches abi from etherscan API and outputs the result to a .json file inside the
 
 ```
 yarn hardhat get-abi --contract 0x514910771AF9Ca656af840dff83E8264EcF986CA --file-name link-token-abi --network mainnet
+```
+
+### get-price
+
+Gets the price for a base asset in terms of a quote asset using chainlink price feeds
+
+##### Required flags
+
+##### Required flags
+
+| Parameter  | Description                               |
+| ---------- | ----------------------------------------- |
+| `contract` | The chainlink price feed contract address |
+
+##### Example usage
+
+```
+
 ```

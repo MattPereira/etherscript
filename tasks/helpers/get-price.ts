@@ -1,4 +1,4 @@
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 /** Get price from chainlink price feed contract on ethereum mainnet
@@ -18,6 +18,8 @@ export async function getPrice(
   // force mainnet for price feeds
   const mainnetURL = (hre.config.networks.mainnet as any).url;
   const provider = new ethers.providers.JsonRpcProvider(mainnetURL);
+
+  console.log("address", address);
 
   const priceFeed = new ethers.Contract(
     address,
@@ -55,9 +57,15 @@ task(
   "get-price",
   "Gets the price for a base asset in terms of a quote asset using chainlink price feeds"
 )
-  .addParam("priceFeed", "The chainlink price feed address")
+  .addParam(
+    "contract",
+    "The chainlink price feed contract address",
+    undefined,
+    types.string,
+    false
+  )
   .setAction(async (taskArgs, hre) => {
-    const price = await getPrice(taskArgs.priceFeed, hre);
+    const price = await getPrice(taskArgs.contract, hre);
 
     console.log(`Price: ${price}`);
   });

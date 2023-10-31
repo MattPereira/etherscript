@@ -23,7 +23,7 @@ task(
   .addParam("fileName", "The name for the file that will be output")
   .setAction(async (taskArgs, hre) => {
     const response = await axios.get(
-      `https://api.etherscan.io/api?module=contract&action=getabi&address=${taskArgs.address}&apikey=${process.env.ETHERSCAN_API_KEY}`
+      `https://api.etherscan.io/api?module=contract&action=getabi&address=${taskArgs.contract}&apikey=${process.env.ETHERSCAN_API_KEY}`
     );
 
     console.log("response", response.data);
@@ -34,14 +34,14 @@ task(
       const abi = JSON.parse(result);
 
       // moves back one folder i.e. "../abis"
-      const folderPath = path.join(__dirname, "..", "abis");
+      const folderPath = path.join(__dirname, "../../", "abis");
 
       // Check if the folder exists, if not, create the folder
       if (!fs.existsSync(folderPath)) {
         fs.mkdirSync(folderPath, { recursive: true });
       }
 
-      const filePath = path.join(folderPath, taskArgs.name + ".json");
+      const filePath = path.join(folderPath, taskArgs.fileName + ".json");
 
       // Write the JSON object to a file
       fs.writeFileSync(filePath, JSON.stringify(abi, null, 4), "utf-8");
