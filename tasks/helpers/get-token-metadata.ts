@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 import ERC20_ABI from "@chainlink/contracts/abi/v0.8/ERC20.json";
-import { Token, ChainId } from "@uniswap/sdk-core";
+import { Token } from "@uniswap/sdk-core";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 /** Creates Token object for use with uniswap sdk
@@ -10,8 +10,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
  */
 
 export async function getTokenMetadata(
-  hre: HardhatRuntimeEnvironment,
-  tokenAddress: string
+  tokenAddress: string,
+  hre: HardhatRuntimeEnvironment
 ) {
   const { ethers } = hre;
   const { provider } = ethers;
@@ -32,6 +32,6 @@ task(
 )
   .addParam("address", "The token contract's address")
   .setAction(async (taskArgs, hre) => {
-    const metadata = await getTokenMetadata(hre, taskArgs.address);
+    const metadata = await getTokenMetadata(taskArgs.address, hre);
     console.log(metadata);
   });

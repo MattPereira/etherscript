@@ -18,14 +18,14 @@ import {
 
 envEncConfig();
 
-/** Task to execute a swap between two tokens
- * using uniswap's smart order router to compute the optimal routes
- * https://docs.uniswap.org/sdk/v3/guides/routing
+/** Swap tokens using uniswap's smart order router to compute the optimal routes
+ *
+ * https://docs.uniswap.org/sdk/v3/guides/swaps/routing
  */
 
 task(
   "smart-swap",
-  "Use the uniswap smart order router to compute optimal routes and execute a swap between two tokens"
+  "execute a swap between two tokens using the uniswap smart order router"
 )
   .addParam(
     "in",
@@ -72,15 +72,15 @@ task(
 
     console.log("Fetching token metadata...");
     const tokenAddress = addressBook[chainId].tokenAddress;
-    const tokenIn = await getTokenMetadata(hre, tokenAddress[tokenInSymbol]);
-    const tokenOut = await getTokenMetadata(hre, tokenAddress[tokenOutSymbol]);
+    const tokenIn = await getTokenMetadata(tokenAddress[tokenInSymbol], hre);
+    const tokenOut = await getTokenMetadata(tokenAddress[tokenOutSymbol], hre);
     const amountIn = taskArgs.amount.toString();
 
     // If on local fork, wrap 1 eth and exchange for tokenIn to prepare for actual target swap
     if (hre.network.name === "hardhat") {
       const amount = "1";
       await wrapETH(hre, amount);
-      const WETH_TOKEN = await getTokenMetadata(hre, tokenAddress["WETH"]);
+      const WETH_TOKEN = await getTokenMetadata(tokenAddress["WETH"], hre);
       const route = await generateRoute(WETH_TOKEN, amount, tokenIn, hre);
       await executeSwap(route, hre);
     }
@@ -108,7 +108,7 @@ async function generateRoute(
 
   let provider: BaseProvider;
   if (hre.network.name === "hardhat") {
-    // uniswap router requires a live network provider even on localhost fork
+    // uniswap router requires a live network provider (localhost fork not supported)
     provider = new hre.ethers.providers.JsonRpcProvider(
       (hre.network.config as any).forking.url
     );
@@ -155,24 +155,17 @@ async function generateRoute(
 
 async function executeSwap(route: SwapRoute, hre: HardhatRuntimeEnvironment) {
   const { ethers } = hre;
-  const signer = (await ethers.getSigners())[0];
   const chainId = (await ethers.provider.getNetwork()).chainId;
   const V3_SWAP_ROUTER_ADDRESS = addressBook[chainId].uniswap.V3_SWAP_ROUTER;
-
   const tokenIn = route.trade.routes[0].input;
   const amountIn = route.trade.swaps[0].inputAmount.toExact();
   const tokenOut = route.trade.routes[0].output;
-
   const txCost = (+route.estimatedGasUsedUSD.toExact()).toFixed(2);
+
   //prettier-ignore
   const quoteMessage = chalk.yellow(`Swap ${amountIn} ${tokenIn.symbol} to ${route?.quote.toExact()} ${tokenOut.symbol} using $${txCost} worth of gas?`);
-
   console.log();
-  if (hre.network.name === "hardhat") {
-    console.log(quoteMessage + "\n");
-  } else {
-    await prompt(quoteMessage);
-  }
+  await prompt(quoteMessage);
 
   // Approve tokenIn to be transferred by the router
   await approveToken(
@@ -190,6 +183,7 @@ async function executeSwap(route: SwapRoute, hre: HardhatRuntimeEnvironment) {
   }
 
   console.log("Sending swap transaction...");
+  const signer = (await ethers.getSigners())[0];
   const swapTx = await signer.sendTransaction({
     data: route?.methodParameters?.calldata,
     to: V3_SWAP_ROUTER_ADDRESS,
@@ -206,8 +200,6 @@ async function executeSwap(route: SwapRoute, hre: HardhatRuntimeEnvironment) {
     console.log("swapTxReceipt", swapTxReceipt);
     throw new Error("Swap failed!");
   }
-
-  const gasSpentInUSD = await getGasSpentInUSD(swapTxReceipt, hre);
 
   const logs = swapTxReceipt.logs;
   // set up interface to parse the logs
@@ -238,6 +230,8 @@ async function executeSwap(route: SwapRoute, hre: HardhatRuntimeEnvironment) {
       tokenOut.decimals
     );
   }
+
+  const gasSpentInUSD = await getGasSpentInUSD(swapTxReceipt, hre);
 
   console.log(
     chalk.green(

@@ -28,11 +28,6 @@ const config: HardhatUserConfig = {
       url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
       accounts: [privateKey],
     },
-    sepolia: {
-      chainId: 11155111,
-      url: `https://eth-sepolia.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [privateKey],
-    },
     arbitrum: {
       chainId: 42161,
       url: `https://arb-mainnet.g.alchemy.com/v2/${providerApiKey}`,
