@@ -122,12 +122,12 @@ async function generateRoute(
     provider,
   });
 
-  const recipient = await hre.ethers.provider.getSigner(0).getAddress();
+  const signerAddress = await hre.ethers.provider.getSigner(0).getAddress();
   const options: SwapOptionsSwapRouter02 = {
-    recipient,
-    slippageTolerance: new Percent(50, 10_000),
-    deadline: Math.floor(Date.now() / 1000 + 1800),
-    type: SwapType.SWAP_ROUTER_02,
+    recipient: signerAddress, // Recipient of the output tokens
+    slippageTolerance: new Percent(50, 10_000), // 50 bips, or 0.50%
+    deadline: Math.floor(Date.now() / 1000 + 1800), // 30 minutes from the current Unix time
+    type: SwapType.SWAP_ROUTER_02, // Uniswap v3 Swap Router
   };
 
   // Generate the route using tokenIn, tokenOut, and options
@@ -182,12 +182,15 @@ async function executeSwap(route: SwapRoute, hre: HardhatRuntimeEnvironment) {
     throw new Error("Failed to fetch gas fee data");
   }
 
+  if (!route.methodParameters)
+    throw new Error("Failed to fetch route.methodParameters");
+
   console.log("Sending swap transaction...");
   const signer = (await ethers.getSigners())[0];
   const swapTx = await signer.sendTransaction({
-    data: route?.methodParameters?.calldata,
+    data: route.methodParameters.calldata,
     to: V3_SWAP_ROUTER_ADDRESS,
-    value: route?.methodParameters?.value,
+    value: route.methodParameters.value,
     from: signer.address,
     maxFeePerGas: maxFeePerGas,
     maxPriorityFeePerGas: maxPriorityFeePerGas,
