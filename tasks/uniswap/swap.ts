@@ -24,7 +24,7 @@ envEncConfig();
  */
 
 task(
-  "smart-swap",
+  "swap",
   "execute a swap between two tokens using the uniswap smart order router"
 )
   .addParam(

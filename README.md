@@ -8,7 +8,7 @@ A collection of useful scripts for interacting with EVM compatible blockchains f
   - [Scripts](#scripts)
   - [Tasks](#tasks)
 - [Script Glossary](#script-glossary)
-  - [smart-swap](#smart-swap)
+  - [swap](#swap)
   - [get-price](#get-price)
   - [get-abi](#get-abi)
 
@@ -71,7 +71,7 @@ yarn hardhat NAME_OF_TASK --NAME_OF_FLAG VALUE_OF_FLAG
 
 ## Script Glossary
 
-### smart-swap
+### swap
 
 Swap tokens using uniswap's smart order router that computes the optimal route before executing the swap.
 
@@ -88,7 +88,7 @@ Swap tokens using uniswap's smart order router that computes the optimal route b
 Execute a swap on the local hardhat network that is configured as fork of arbitrum
 
 ```
-yarn hardhat smart-swap --in USDC --amount 100 --out rETH
+yarn hardhat swap --in USDC --amount 100 --out rETH
 ```
 
 ### get-abi
